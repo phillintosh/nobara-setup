@@ -6,7 +6,7 @@
 # was schon da ist, wird übersprungen.
 #
 # Aufruf:
-#   curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
+#   curl -fsSL https://nxgr.de/nobara-alltag | bash
 #
 # Voraussetzung: basis.sh ist gelaufen (Flathub ist eingetragen).
 # Was kein Skript kann, steht im README.

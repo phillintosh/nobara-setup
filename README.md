@@ -6,18 +6,25 @@ Zwei Skripte plus die Schritte, die kein Skript übernehmen kann.
 
 ```bash
 # Teil 1 — Basis: Flathub, Enpass, VS Code, Claude Code
-curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis.sh | bash
+curl -fsSL https://nxgr.de/nobara-basis | bash
 
 # Neu starten, dann:
 
 # Teil 2 — Alltag: alle übrigen Programme
-curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
+curl -fsSL https://nxgr.de/nobara-alltag | bash
 ```
 
 Nach dem ersten Befehl steht genug, um ab hier mit Claude weiterzuarbeiten.
 Beide Skripte laufen ohne Schaden mehrfach.
 
-Wer die Befehle lieber erst liest, klont statt zu pipen:
+Wer wissen will, wohin ein Kurzlink zeigt, hängt ein `+` an — das nennt das
+Ziel, statt es auszuführen:
+
+```bash
+curl -fsSL https://nxgr.de/nobara-basis+
+```
+
+Wer die Befehle lieber ganz liest, klont statt zu pipen:
 
 ```bash
 git clone https://github.com/phillintosh/nobara-setup.git
@@ -369,10 +376,7 @@ Windows (geprüft am 2026-09-20). Wer ihn braucht, müsste ihn wie Battle.net
 
 Punkte, die noch entschieden werden müssen:
 
-1. **Kurze URL für die Skripte.** `pkr8.de` liefert kein gültiges Zertifikat
-   (es lautet auf `*.kasserver.com`), taugt also nicht als Einstieg. Bis eine
-   Adresse feststeht, laufen die Befehle über die lange GitHub-Adresse.
-2. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
+1. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
    das Addon selbst sammelt auch ohne ihn.
 
 ### Beim Aufräumen bereits korrigiert
@@ -495,3 +499,23 @@ jetzt, wer den Abschnitt erledigt.
 
 Nicht übernommen wurde der Hinweis, die „Uhr" sei eine Aufgabe ohne Weg —
 das ist so gewollt, sie steht ausdrücklich nur als Erinnerung.
+
+### Kurzlinks, 2026-09-20
+
+Die Skripte laufen über `nxgr.de`, den eigenen Kurzlink-Dienst auf dem
+Server in Deutschland — kein fremder Anbieter im Datenpfad. Angelegt und
+geprüft vom Group-Chat, hier gegengeprüft: dreimal 302 auf die richtige
+Adresse, und `curl -fsSL https://nxgr.de/nobara-basis` liefert tatsächlich
+den Skriptkopf.
+
+Die Kennungen `nobara-basis`, `nobara-alltag` und `nobara-setup` stehen
+dauerhaft und werden nie wiederverwendet. Zieht ein Ziel um, wird der Link
+umgehängt statt neu vergeben.
+
+> Ein Kurzlink ist ein Glied mehr in der Kette: Wer sein Ziel ändern kann,
+> führt Code auf jedem frisch eingerichteten Rechner aus. Ändern kann das
+> heute allein Phil. Wer dem Befehl trotzdem nicht traut, hängt ein `+` an
+> und sieht das Ziel, bevor etwas läuft.
+
+`curl`-Aufrufe werden nicht mitgezählt, der Dienst erkennt Maschinen am
+User-Agent. Die Installationsaufrufe verfälschen die Klickzahlen also nicht.

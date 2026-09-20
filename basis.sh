@@ -7,7 +7,7 @@
 # Claude Code als Werkzeug.
 #
 # Aufruf:
-#   curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis.sh | bash
+#   curl -fsSL https://nxgr.de/nobara-basis | bash
 #
 # Alles Weitere erledigt alltag.sh. Was kein Skript kann, steht im README.
 
@@ -99,6 +99,6 @@ cat <<'ENDE'
 
     Dann weiter mit:
 
-    curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
+    curl -fsSL https://nxgr.de/nobara-alltag | bash
 
 ENDE
