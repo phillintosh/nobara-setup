@@ -123,11 +123,24 @@ Danach neu starten.
 Danach in den Autostart-Eintrag `-minimize` ergänzen. **Das macht kein
 Skript.**
 
-> ⚠️ **Der Tresor liegt nicht auf diesem Rechner.** Enpass ist installiert,
-> aber leer. Bevor irgendeine Adresse aus der sicheren Notiz greifbar ist,
-> muss die Tresordatei von außen kommen — und der Weg dorthin darf nichts
-> voraussetzen, was selbst im Tresor steht. Dieser Schritt ist noch nicht
-> festgehalten, siehe „Offen für die nächste Runde".
+**Tresor über WebDAV einbinden.** Enpass ist nach der Installation leer. Der
+Tresor liegt auf dem eigenen WebDAV-Server und wird beim ersten Start geholt:
+
+1. Enpass öffnen → **vorhandenen Tresor wiederherstellen** (nicht „neu
+   anlegen", das legt einen zweiten an).
+2. Als Quelle **WebDAV** wählen.
+3. Adresse, Benutzername und Passwort des WebDAV-Zugangs eingeben.
+4. Master-Passwort des Tresors eingeben.
+
+> ⚠️ **Diese vier Angaben dürfen nicht nur im Tresor stehen.** Sie sind der
+> Schlüssel zu ihm selbst — wer sie dort ablegt, sperrt sich auf einem
+> frischen Rechner aus. Sie kommen vom Telefon, auf dem Enpass schon
+> eingerichtet ist, oder von einem Zettel. Nicht aus dieser Datei und nicht
+> aus dem NAS, dessen Adresse ihrerseits im Tresor steht.
+
+Erst danach sind NAS, Adressbuch und Kalender greifbar, und erst danach
+ergeben die Verweise auf die sichere Notiz „Nobara Einrichtung" unten einen
+Sinn.
 
 **Dropbox** — bleibt unverändert
 
@@ -356,15 +369,10 @@ Windows (geprüft am 2026-09-20). Wer ihn braucht, müsste ihn wie Battle.net
 
 Punkte, die noch entschieden werden müssen:
 
-1. **Wie kommt der Enpass-Tresor auf den frischen Rechner?** Ohne ihn hängen
-   NAS, Adressbuch und Kalender in der Luft, und der Weg darf nichts
-   voraussetzen, was selbst im Tresor steht. Liegt die Datei auf dem NAS,
-   braucht es dessen Adresse; liegt sie in Dropbox, braucht es das Passwort.
-   Das ist die letzte echte Lücke in der Kette.
-2. **Kurze URL für die Skripte.** `pkr8.de` liefert kein gültiges Zertifikat
+1. **Kurze URL für die Skripte.** `pkr8.de` liefert kein gültiges Zertifikat
    (es lautet auf `*.kasserver.com`), taugt also nicht als Einstieg. Bis eine
    Adresse feststeht, laufen die Befehle über die lange GitHub-Adresse.
-3. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
+2. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
    das Addon selbst sammelt auch ohne ihn.
 
 ### Beim Aufräumen bereits korrigiert
@@ -445,6 +453,14 @@ Punkte, die noch entschieden werden müssen:
 - **Wowhead:** Gibt es für Linux nicht. Die Downloadseite nennt ausschließlich
   Windows. Als Notiz vermerkt statt als Schritt.
 - **ComfyUI** ist auf Wunsch vorerst herausgenommen.
+
+### Tresor-Weg ergänzt, 2026-09-20
+
+Die Prüfung hatte als letzte Lücke gemeldet, dass Enpass zwar installiert
+wird, der Tresor aber leer bleibt und alle privaten Adressen genau darin
+liegen. Der Weg ist WebDAV, er steht jetzt in Abschnitt 3 — mitsamt der
+Warnung, dass Adresse, Zugang und Master-Passwort nicht im Tresor selbst
+abgelegt werden dürfen.
 
 ### Nach der Prüfung überarbeitet, 2026-09-20
 

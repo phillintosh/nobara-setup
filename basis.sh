@@ -90,9 +90,9 @@ cat <<'ENDE'
 
     Von Hand, in dieser Reihenfolge:
 
-    1. Enpass öffnen und den Tresor einbinden.
-       Die Tresordatei liegt NICHT auf diesem Rechner — siehe README,
-       Abschnitt 3.
+    1. Enpass öffnen, "vorhandenen Tresor wiederherstellen", Quelle
+       WebDAV. Adresse, Zugang und Master-Passwort kommen vom Telefon
+       oder vom Zettel, nicht aus dem Tresor selbst. README, Abschnitt 3.
     2. Enpass-Autostart um  -minimize  ergänzen.
     3. In der sicheren Notiz "Nobara Einrichtung" stehen die privaten
        Adressen: NAS, Adressbuch, Kalender.
