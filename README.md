@@ -5,31 +5,42 @@ Zwei Skripte plus die Schritte, die kein Skript übernehmen kann.
 ## Schnellstart
 
 ```bash
-# Teil 1 — Basis: Enpass, VS Code, Claude Code
-curl -fsSL https://pkr8.de/basis | bash
+# Teil 1 — Basis: Flathub, Enpass, VS Code, Claude Code
+curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis.sh | bash
+
+# Neu starten, dann:
 
 # Teil 2 — Alltag: alle übrigen Programme
-curl -fsSL https://pkr8.de/alltag | bash
+curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
 ```
 
 Nach dem ersten Befehl steht genug, um ab hier mit Claude weiterzuarbeiten.
 Beide Skripte laufen ohne Schaden mehrfach.
 
-## Was die Skripte nicht können
+Wer die Befehle lieber erst liest, klont statt zu pipen:
 
-Steam-Klickwege, Windows-Installer unter Wine, Profile und Kontodaten. Diese
-Schritte stehen unten und bleiben Handarbeit:
+```bash
+git clone https://github.com/phillintosh/nobara-setup.git
+cd nobara-setup && less basis.sh && ./basis.sh
+```
 
-| Abschnitt | Was |
+## Wie die Abschnitte zu lesen sind
+
+Jede Überschrift unten sagt, wer den Abschnitt erledigt:
+
+| Kennzeichen | Bedeutung |
 |---|---|
-| 2 | OpenRGB-Profil, Fensterverhalten, NAS, Uhr |
-| 3 | Dropbox |
-| 4 | Librewolf `about:config`, Thunderbird-Konten |
-| 7 | Affinity |
-| 9 | Battle.net in Steam |
+| *basis.sh* / *alltag.sh* | Das Skript macht es, nichts abzutippen |
+| *Handarbeit* | Kein Skript kann das, Schritt für Schritt folgen |
+| *gemischt* | Installation per Skript, Einstellungen von Hand |
+
+**Reine Handarbeit**, auch nach beiden Skripten: Fensterverhalten, Uhr,
+OpenRGB, NAS, Dropbox, Librewolf-`about:config`, Thunderbird-Konten,
+Enpass-Autostart, WoWUp-Menüeintrag, Affinity und Battle.net.
 
 **Feste Regel:** Dropbox bleibt wie unten beschrieben (RPM von der Webseite,
-Nautilus-Paket). Andere Wege haben Probleme gemacht.
+Nautilus-Paket). Andere Wege haben Probleme gemacht. Der Befehl dort steht
+bewusst ohne `-y`.
 
 **Private Adressen** — NAS, Adressbuch, Kalender — stehen nicht in diesem
 Repo, sondern in Enpass unter der sicheren Notiz „Nobara Einrichtung".
@@ -42,7 +53,7 @@ Stand: 2026-09-20 · Grundlage: Nobara 44
 
 ---
 
-## 0. Vor der Installation (an einem anderen Rechner)
+## 0. Vor der Installation (an einem anderen Rechner)  ·  *Handarbeit, an einem anderen Rechner*
 
 **ISO prüfen**
 
@@ -62,7 +73,7 @@ Repo-Anleitung: https://github.com/balena-io/etcher#redhat-rhel-and-fedora-based
 
 ---
 
-## 1. Grundlage
+## 1. Grundlage  ·  *basis.sh und alltag.sh*
 
 **Paketquellen und Gamescope**
 
@@ -86,7 +97,7 @@ Danach neu starten.
 
 ---
 
-## 2. Systemeinstellungen (KDE)
+## 2. Systemeinstellungen (KDE)  ·  *Handarbeit*
 
 - **Fensterverhalten** → „Verhindern unerwünschter Aktivierung" → **Keine**
 - **NAS verbinden:** `smb://`-Adresse in die Adresszeile von Dolphin
@@ -102,14 +113,21 @@ Danach neu starten.
 
 ---
 
-## 3. Passwörter und Dateien
+## 3. Passwörter und Dateien  ·  *gemischt*
 
 **Enpass**
 
-    sudo curl -s https://yum.enpass.io/enpass-yum.repo -o /etc/yum.repos.d/enpass.repo
+    sudo curl -fsSL https://yum.enpass.io/enpass-yum.repo -o /etc/yum.repos.d/enpass.repo
     sudo dnf install -y enpass
 
-Danach in den Autostart-Eintrag `-minimize` ergänzen.
+Danach in den Autostart-Eintrag `-minimize` ergänzen. **Das macht kein
+Skript.**
+
+> ⚠️ **Der Tresor liegt nicht auf diesem Rechner.** Enpass ist installiert,
+> aber leer. Bevor irgendeine Adresse aus der sicheren Notiz greifbar ist,
+> muss die Tresordatei von außen kommen — und der Weg dorthin darf nichts
+> voraussetzen, was selbst im Tresor steht. Dieser Schritt ist noch nicht
+> festgehalten, siehe „Offen für die nächste Runde".
 
 **Dropbox** — bleibt unverändert
 
@@ -124,7 +142,7 @@ Paket von https://www.dropbox.com/install-linux laden, dann:
 
 ---
 
-## 4. Browser und Mail
+## 4. Browser und Mail  ·  *gemischt*
 
 **Firefox und Thunderbird**
 
@@ -149,7 +167,7 @@ Danach `about:config`:
 
 ---
 
-## 5. Kommunikation
+## 5. Kommunikation  ·  *alltag.sh*
 
     flatpak install -y flathub \
       org.telegram.desktop \
@@ -170,7 +188,7 @@ Danach `about:config`:
 
 ---
 
-## 6. Notizen und Medien
+## 6. Notizen und Medien  ·  *alltag.sh*
 
     flatpak install -y flathub \
       com.notesnook.Notesnook \
@@ -179,7 +197,7 @@ Danach `about:config`:
 
 ---
 
-## 7. Grafik
+## 7. Grafik  ·  *gemischt*
 
 **Gimp**
 
@@ -231,7 +249,15 @@ Anleitung: https://github.com/seapear/AffinityOnLinux/blob/main/Guides/Wine/Guid
 
 ---
 
-## 8. Entwicklung
+## 8. Entwicklung  ·  *basis.sh*
+
+**Claude Code**
+
+    curl -fsSL https://claude.ai/install.sh | bash
+
+> Nativer Installer, kein npm. Landet unter `~/.local/share/claude/versions/`
+> mit einem Verweis in `~/.local/bin/claude`. Liegt `~/.local/bin` nicht im
+> PATH, hilft eine neue Shell. Die Anmeldung läuft beim ersten Start.
 
 **Visual Studio Code** (Microsoft-Repo, nicht Flatpak)
 
@@ -249,7 +275,7 @@ Anleitung: https://github.com/seapear/AffinityOnLinux/blob/main/Guides/Wine/Guid
 
 ---
 
-## 9. Spiele
+## 9. Spiele  ·  *gemischt*
 
 **Battle.net** (über Steam mit Proton)
 
@@ -328,11 +354,17 @@ Windows (geprüft am 2026-09-20). Wer ihn braucht, müsste ihn wie Battle.net
 
 ## Offen für die nächste Runde
 
-Punkte, die beim Aufräumen aufgefallen sind und noch entschieden werden müssen:
+Punkte, die noch entschieden werden müssen:
 
-1. **Skripte statt Abtippen** — Aufteilung in ein kurzes Basis-Skript und ein
-   ausführliches zweites, dazu dauerhafte URLs. In Arbeit.
-2. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
+1. **Wie kommt der Enpass-Tresor auf den frischen Rechner?** Ohne ihn hängen
+   NAS, Adressbuch und Kalender in der Luft, und der Weg darf nichts
+   voraussetzen, was selbst im Tresor steht. Liegt die Datei auf dem NAS,
+   braucht es dessen Adresse; liegt sie in Dropbox, braucht es das Passwort.
+   Das ist die letzte echte Lücke in der Kette.
+2. **Kurze URL für die Skripte.** `pkr8.de` liefert kein gültiges Zertifikat
+   (es lautet auf `*.kasserver.com`), taugt also nicht als Einstieg. Bis eine
+   Adresse feststeht, laufen die Befehle über die lange GitHub-Adresse.
+3. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
    das Addon selbst sammelt auch ohne ihn.
 
 ### Beim Aufräumen bereits korrigiert
@@ -342,7 +374,8 @@ Punkte, die beim Aufräumen aufgefallen sind und noch entschieden werden müssen
 - `WINEPREFIX="home/phil/..."` → `/home/phil/...` (führender Schrägstrich
   fehlte an drei Stellen, auch beim Installer-Pfad)
 - `identity.fxaccounts.enabled auf 1` → `true` (ist ein Ja/Nein-Wert)
-- `-y` bei den dnf- und flatpak-Befehlen einheitlich gesetzt
+- `-y` bei den dnf- und flatpak-Befehlen gesetzt, mit einer Ausnahme:
+  Dropbox bleibt unverändert, dort wird bewusst nachgefragt
 - Balena-Etcher-Dateiname von der festen Version `2.1.6` gelöst
 
 ### Affinity, überarbeitet am 2026-09-20
@@ -412,3 +445,37 @@ Punkte, die beim Aufräumen aufgefallen sind und noch entschieden werden müssen
 - **Wowhead:** Gibt es für Linux nicht. Die Downloadseite nennt ausschließlich
   Windows. Als Notiz vermerkt statt als Schritt.
 - **ComfyUI** ist auf Wunsch vorerst herausgenommen.
+
+### Nach der Prüfung überarbeitet, 2026-09-20
+
+Ein Prüflauf gegen die Frage „kommt ein Fremder damit ans Ziel" brachte
+18 Befunde. Zwei davon waren echte Fehler, die das Alltag-Skript mitten im
+Lauf beendet hätten:
+
+- **Die Rückfallzweige waren nicht erreichbar.** Unter `set -euo pipefail`
+  übernimmt eine Zuweisung wie `url=$(curl … | grep …)` den Rückgabewert der
+  Pipeline. Ging `grep` leer aus — etwa weil das Stundenkontingent der
+  GitHub-Schnittstelle erschöpft war — endete das Skript sofort, statt die
+  vorgesehene Warnung auszugeben. WoWUp, das Aufräumen und die
+  Handarbeitsliste am Ende entfielen dann stillschweigend. Behoben mit einem
+  ausdrücklichen `|| url=""`, nachgestellt und gegengeprüft.
+- **`flatpak install --noninteractive` brach ab**, sobald neben dem
+  System-Remote noch ein Benutzer-Remote namens `flathub` eingetragen war:
+  „found in multiple installations". Genau so steht es auf dem jetzigen
+  Rechner. Behoben durch ein ausdrückliches `--system`.
+
+Weiter behoben: `dnf config-manager addrepo` scheiterte beim zweiten Lauf
+(jetzt `--overwrite`), `grep '^flathub'` hätte auch `flathub-beta` als
+Treffer gewertet (jetzt `grep -qx`), die Prüfung auf Claude Code fand eine
+frische Installation im selben Terminal nicht, `flatpak update` fehlte, der
+Neustart nach dem Systemupdate wurde nicht erwähnt, Steam war vorausgesetzt
+aber nirgends installiert, und die Handarbeitsliste im Skript war kürzer als
+die im README.
+
+Am README: Die Schnellstart-Befehle zeigten auf eine tote Adresse, ohne dass
+irgendwo die Dateinamen oder ein Klon-Weg standen. Claude Code wurde vom
+Skript installiert, kam im README aber nicht vor. Jede Überschrift sagt
+jetzt, wer den Abschnitt erledigt.
+
+Nicht übernommen wurde der Hinweis, die „Uhr" sei eine Aufgabe ohne Weg —
+das ist so gewollt, sie steht ausdrücklich nur als Erinnerung.

@@ -6,7 +6,8 @@
 # weitergearbeitet werden kann: Enpass für die Passwörter, VS Code und
 # Claude Code als Werkzeug.
 #
-# Aufruf:  curl -fsSL https://pkr8.de/basis | bash
+# Aufruf:
+#   curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis.sh | bash
 #
 # Alles Weitere erledigt alltag.sh. Was kein Skript kann, steht im README.
 
@@ -23,14 +24,20 @@ fi
 
 blau "Anmeldung für sudo"
 sudo -v
-# sudo-Zeitstempel frisch halten, solange das Skript läuft
-while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done 2>/dev/null &
+# sudo-Zeitstempel frisch halten. Eigene Subshell ohne set -e, damit ein
+# einzelner Fehlschlag die Schleife nicht still beendet; endet mit dem Skript.
+( set +e
+  while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 30; done
+) &
+sudo_schleife=$!
+trap 'kill "$sudo_schleife" 2>/dev/null || true' EXIT
 
 blau "Flathub eintragen"
-if flatpak remotes | grep -q '^flathub'; then
+# Exakter Vergleich: "flathub-beta" darf nicht als "flathub" durchgehen.
+if flatpak remotes --columns=name | grep -qx 'flathub'; then
     grau "war schon eingetragen"
 else
-    flatpak remote-add --if-not-exists flathub \
+    sudo flatpak remote-add --system --if-not-exists flathub \
         https://dl.flathub.org/repo/flathub.flatpakrepo
     gruen "Flathub eingetragen"
 fi
@@ -43,7 +50,6 @@ else
         -o /etc/yum.repos.d/enpass.repo
     sudo dnf install -y enpass
     gruen "Enpass installiert"
-    grau "Autostart-Eintrag später um -minimize ergänzen"
 fi
 
 blau "Visual Studio Code"
@@ -66,24 +72,33 @@ else
 fi
 
 blau "Claude Code"
-if command -v claude >/dev/null 2>&1; then
-    grau "ist schon installiert ($(claude --version 2>/dev/null || echo 'Version unbekannt'))"
+# Nicht nur command -v: direkt nach der Installation liegt claude in
+# ~/.local/bin, das in dieser Shell noch nicht im PATH sein muss.
+if command -v claude >/dev/null 2>&1 || [ -x "$HOME/.local/bin/claude" ]; then
+    grau "ist schon installiert"
 else
     curl -fsSL https://claude.ai/install.sh | bash
     gruen "Claude Code installiert"
-    if ! printf '%s' "$PATH" | grep -q "$HOME/.local/bin"; then
-        grau "~/.local/bin liegt nicht im PATH — neue Shell öffnen"
-    fi
 fi
+case ":$PATH:" in
+    *":$HOME/.local/bin:"*) ;;
+    *) grau "~/.local/bin liegt nicht im PATH — neue Shell öffnen" ;;
+esac
 
 blau "Basis steht"
 cat <<'ENDE'
 
-    Als Nächstes:
+    Von Hand, in dieser Reihenfolge:
 
-    1. Enpass öffnen und den Tresor verbinden.
-    2. Die sichere Notiz "Nobara Einrichtung" enthält die privaten
-       Adressen (NAS, Adressbuch, Kalender).
-    3. Weiter mit:  curl -fsSL https://pkr8.de/alltag | bash
+    1. Enpass öffnen und den Tresor einbinden.
+       Die Tresordatei liegt NICHT auf diesem Rechner — siehe README,
+       Abschnitt 3.
+    2. Enpass-Autostart um  -minimize  ergänzen.
+    3. In der sicheren Notiz "Nobara Einrichtung" stehen die privaten
+       Adressen: NAS, Adressbuch, Kalender.
+
+    Dann weiter mit:
+
+    curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
 
 ENDE

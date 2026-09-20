@@ -5,7 +5,8 @@
 # Installiert die übrigen Programme. Läuft ohne Schaden mehrfach:
 # was schon da ist, wird übersprungen.
 #
-# Aufruf:  curl -fsSL https://pkr8.de/alltag | bash
+# Aufruf:
+#   curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag.sh | bash
 #
 # Voraussetzung: basis.sh ist gelaufen (Flathub ist eingetragen).
 # Was kein Skript kann, steht im README.
@@ -18,22 +19,27 @@ grau()  { printf '    \033[0;90m· %s\033[0m\n' "$*"; }
 warn()  { printf '    \033[0;33m! %s\033[0m\n' "$*"; }
 
 command -v dnf >/dev/null 2>&1 || { echo "Nur für Nobara/Fedora." >&2; exit 1; }
-flatpak remotes | grep -q '^flathub' || {
+flatpak remotes --columns=name | grep -qx 'flathub' || {
     echo "Flathub fehlt — erst basis.sh laufen lassen." >&2; exit 1; }
 
 blau "Anmeldung für sudo"
 sudo -v
-while true; do sudo -n true; sleep 50; kill -0 "$$" 2>/dev/null || exit; done 2>/dev/null &
+( set +e
+  while kill -0 "$$" 2>/dev/null; do sudo -n true 2>/dev/null; sleep 30; done
+) &
+sudo_schleife=$!
+trap 'kill "$sudo_schleife" 2>/dev/null || true' EXIT
 
 blau "Systemupdate (dauert)"
 nobara-sync cli || warn "nobara-sync übersprungen"
+flatpak update -y || warn "flatpak update übersprungen"
 
 blau "Programme aus den Systemquellen"
 sudo dnf install -y \
     firefox thunderbird filezilla gimp \
-    gamescope \
+    gamescope steam \
     hunspell-de langpacks-de
-gruen "Firefox, Thunderbird, Filezilla, Gimp, Gamescope, Rechtschreibung"
+gruen "Firefox, Thunderbird, Filezilla, Gimp, Gamescope, Steam, Rechtschreibung"
 
 blau "Wine und winetricks (für Affinity)"
 sudo dnf install -y winehq-staging winetricks
@@ -43,7 +49,8 @@ blau "Librewolf"
 if rpm -q librewolf >/dev/null 2>&1; then
     grau "ist schon installiert"
 else
-    sudo dnf config-manager addrepo \
+    # --overwrite, damit ein zweiter Lauf nach einem Abbruch nicht scheitert
+    sudo dnf config-manager addrepo --overwrite \
         --from-repofile=https://repo.librewolf.net/librewolf.repo
     sudo dnf install -y librewolf
     gruen "Librewolf installiert"
@@ -51,7 +58,9 @@ else
 fi
 
 blau "Flatpaks"
-flatpak install -y --noninteractive flathub \
+# --system: auf Rechnern mit zusätzlichem Benutzer-Remote wäre "flathub"
+# sonst mehrdeutig und --noninteractive bräche ab.
+sudo flatpak install --system -y --noninteractive flathub \
     org.telegram.desktop \
     com.discordapp.Discord \
     us.zoom.Zoom \
@@ -66,14 +75,19 @@ blau "TSM (TradeSkillMaster)"
 if rpm -q tsm-app >/dev/null 2>&1; then
     grau "ist schon installiert"
 else
+    # Das || "" ist nötig: unter set -e würde die Zuweisung sonst das
+    # ganze Skript beenden, sobald curl oder grep leer ausgehen.
     tsm_url=$(curl -fsSL \
         https://api.github.com/repos/exceptionptr/tsm-app-linux/releases/latest \
-        | grep -o 'https://[^"]*\.noarch\.rpm' | head -1)
+        2>/dev/null | grep -o 'https://[^"]*\.noarch\.rpm' | head -1) || tsm_url=""
     if [ -n "$tsm_url" ]; then
-        curl -fsSL "$tsm_url" -o /tmp/tsm-app.rpm
-        sudo dnf install -y /tmp/tsm-app.rpm
-        rm -f /tmp/tsm-app.rpm
-        gruen "TSM installiert ($(basename "$tsm_url"))"
+        tsm_rpm=$(mktemp --suffix=.rpm)
+        if curl -fsSL "$tsm_url" -o "$tsm_rpm" && sudo dnf install -y "$tsm_rpm"; then
+            gruen "TSM installiert ($(basename "$tsm_url"))"
+        else
+            warn "TSM ließ sich nicht installieren, von Hand nachholen"
+        fi
+        rm -f "$tsm_rpm"
     else
         warn "TSM-Download nicht gefunden, von Hand nachholen"
     fi
@@ -86,33 +100,39 @@ else
     mkdir -p "$HOME/.local/bin"
     wowup_url=$(curl -fsSL \
         https://api.github.com/repos/WowUp/WowUp/releases/latest \
-        | grep -o 'https://[^"]*\.AppImage' | head -1)
-    if [ -n "$wowup_url" ]; then
-        curl -fsSL "$wowup_url" -o "$HOME/.local/bin/WowUp.AppImage"
+        2>/dev/null | grep -o 'https://[^"]*\.AppImage' | head -1) || wowup_url=""
+    if [ -n "$wowup_url" ] && curl -fsSL "$wowup_url" -o "$HOME/.local/bin/WowUp.AppImage"; then
         chmod +x "$HOME/.local/bin/WowUp.AppImage"
         gruen "WoWUp geholt ($(basename "$wowup_url"))"
+        grau "Menüeintrag legt das AppImage nicht selbst an"
     else
+        rm -f "$HOME/.local/bin/WowUp.AppImage"
         warn "WoWUp-Download nicht gefunden, von Hand nachholen"
     fi
 fi
 
 blau "Aufräumen"
-flatpak uninstall --unused -y >/dev/null 2>&1 || true
+sudo flatpak uninstall --system --unused -y >/dev/null 2>&1 || true
 gruen "ungenutzte Laufzeitumgebungen entfernt"
 
-blau "Fertig"
+blau "Fertig — jetzt neu starten"
 cat <<'ENDE'
 
-    Es fehlt noch die Handarbeit, die kein Skript übernehmen kann:
+    Nach dem Systemupdate gehört ein Neustart dazu.
 
-      · Dropbox      Paket von dropbox.com/install-linux laden
-      · Affinity     Installer über Wine, siehe README
-      · Battle.net   als Nicht-Steam-Spiel in Steam eintragen
-      · OpenRGB      Profil anlegen und in den Autostart
-      · Librewolf    drei Werte in about:config
-      · Thunderbird  Adressbuch und Kalender (Adressen: Enpass)
-      · NAS          smb-Adresse in Dolphin (Adresse: Enpass)
-      · Uhr          aus der Software-Verwaltung
+    Danach die Handarbeit, die kein Skript übernehmen kann:
+
+      · Fensterverhalten  "Verhindern unerwünschter Aktivierung" auf Keine
+      · Uhr               aus der Software-Verwaltung
+      · OpenRGB           Profil anlegen und in den Autostart
+      · NAS               smb-Adresse in Dolphin (Adresse: Enpass)
+      · Dropbox           Paket von dropbox.com/install-linux laden
+      · Librewolf         drei Werte in about:config
+      · Thunderbird       Adressbuch und Kalender (Adressen: Enpass)
+      · Enpass            Autostart um -minimize ergänzen
+      · WoWUp             Menüeintrag anlegen
+      · Affinity          Installer über Wine, siehe README
+      · Battle.net        als Nicht-Steam-Spiel in Steam eintragen
 
     Die vollständige Anleitung steht im README des Repos.
 
