@@ -1,0 +1,414 @@
+# Nobara — neues System einrichten
+
+Zwei Skripte plus die Schritte, die kein Skript übernehmen kann.
+
+## Schnellstart
+
+```bash
+# Teil 1 — Basis: Enpass, VS Code, Claude Code
+curl -fsSL https://pkr8.de/basis | bash
+
+# Teil 2 — Alltag: alle übrigen Programme
+curl -fsSL https://pkr8.de/alltag | bash
+```
+
+Nach dem ersten Befehl steht genug, um ab hier mit Claude weiterzuarbeiten.
+Beide Skripte laufen ohne Schaden mehrfach.
+
+## Was die Skripte nicht können
+
+Steam-Klickwege, Windows-Installer unter Wine, Profile und Kontodaten. Diese
+Schritte stehen unten und bleiben Handarbeit:
+
+| Abschnitt | Was |
+|---|---|
+| 2 | OpenRGB-Profil, Fensterverhalten, NAS, Uhr |
+| 3 | Dropbox |
+| 4 | Librewolf `about:config`, Thunderbird-Konten |
+| 7 | Affinity |
+| 9 | Battle.net in Steam |
+
+**Feste Regel:** Dropbox bleibt wie unten beschrieben (RPM von der Webseite,
+Nautilus-Paket). Andere Wege haben Probleme gemacht.
+
+**Private Adressen** — NAS, Adressbuch, Kalender — stehen nicht in diesem
+Repo, sondern in Enpass unter der sicheren Notiz „Nobara Einrichtung".
+
+**Woher ein neues Programm kommt:** erst `dnf`, dann Flatpak. Was ins System
+greift, gehört ins System — Dateimanager-Erweiterungen, Entwicklungswerkzeuge,
+Fernwartung. Was nur ein Fenster ist, darf gekapselt sein.
+
+Stand: 2026-09-20 · Grundlage: Nobara 44
+
+---
+
+## 0. Vor der Installation (an einem anderen Rechner)
+
+**ISO prüfen**
+
+    Nobara-44-Official-2026-08-28.iso
+    sha256sum: 7527b2091a0e2de04a2939e24e9a65331431719a238dc2ca2d08acddd1da296b
+
+    sha256sum ~/Downloads/Nobara-44-Official-2026-08-28.iso
+
+**Balena Etcher** (schreibt den Stick)
+
+Repo-Anleitung: https://github.com/balena-io/etcher#redhat-rhel-and-fedora-based-package-repository-gnulinux-x86x64
+
+    cd ~/Downloads
+    sudo dnf install -y ./balena-etcher-*.rpm
+
+> Dateiname nicht auf eine Version festnageln, die Nummer wechselt.
+
+---
+
+## 1. Grundlage
+
+**Paketquellen und Gamescope**
+
+    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+    sudo dnf install -y gamescope
+
+**Systemupdate**
+
+    nobara-sync cli && flatpak update -y && flatpak uninstall --unused -y
+
+Danach neu starten.
+
+> Der zweite Flatpak-Befehl räumt Laufzeitumgebungen weg, die kein Programm
+> mehr braucht. Ohne ihn sammeln sich alte Fassungen an: gemessen am
+> 2026-09-20 lagen 8,7 GB auf der Platte, davon nur 1,4 GB die Programme
+> selbst.
+
+**Deutsche Rechtschreibprüfung**
+
+    sudo dnf install -y hunspell-de langpacks-de
+
+---
+
+## 2. Systemeinstellungen (KDE)
+
+- **Fensterverhalten** → „Verhindern unerwünschter Aktivierung" → **Keine**
+- **NAS verbinden:** `smb://`-Adresse in die Adresszeile von Dolphin
+  (Adresse in Enpass, sichere Notiz „Nobara Einrichtung")
+- **Uhr installieren** (aus der Software-Verwaltung). Steht so in den alten
+  Notizen, der genaue Schritt ist nicht mehr festgehalten — hier nur als
+  Erinnerung, dass es zu tun ist.
+- **OpenRGB:**
+  1. Profil erstellen und anpassen
+  2. Systemeinstellungen → Autostart → OpenRGB hinzufügen
+  3. Bei diesem Eintrag als Argumente eintragen:
+     `--profile NAME.orp --startminimized`
+
+---
+
+## 3. Passwörter und Dateien
+
+**Enpass**
+
+    sudo curl -s https://yum.enpass.io/enpass-yum.repo -o /etc/yum.repos.d/enpass.repo
+    sudo dnf install -y enpass
+
+Danach in den Autostart-Eintrag `-minimize` ergänzen.
+
+**Dropbox** — bleibt unverändert
+
+Paket von https://www.dropbox.com/install-linux laden, dann:
+
+    cd ~/Downloads
+    sudo dnf install ./nautilus-dropbox-*.rpm
+
+**Filezilla**
+
+    sudo dnf install -y filezilla
+
+---
+
+## 4. Browser und Mail
+
+**Firefox und Thunderbird**
+
+    sudo dnf install -y firefox thunderbird
+
+Thunderbird danach verbinden. Die beiden Adressen stehen in Enpass unter der
+sicheren Notiz **„Nobara Einrichtung"**:
+
+- Adressbuch (CardDAV)
+- Kalender (CalDAV)
+
+**Librewolf**
+
+    sudo dnf config-manager addrepo --from-repofile=https://repo.librewolf.net/librewolf.repo
+    sudo dnf install -y librewolf
+
+Danach `about:config`:
+
+- `browser.startup.page` → `3` (gespeicherte Tabs)
+- `identity.fxaccounts.enabled` → `true` (Synchronisierung)
+- Schildsymbol neben der Adresse → Cookies freigeben
+
+---
+
+## 5. Kommunikation
+
+    flatpak install -y flathub \
+      org.telegram.desktop \
+      com.discordapp.Discord \
+      us.zoom.Zoom \
+      com.anydesk.Anydesk
+
+> **AnyDesk** ist der einzige Wackelkandidat unter den Flatpaks: Fernwartung,
+> Sandbox und Wayland vertragen sich schlecht. Klemmt die Bildschirmübertragung
+> oder die Eingabe, das offizielle RPM von anydesk.com nehmen.
+
+**Teamspeak 3**
+
+    flatpak install -y flathub com.teamspeak.TeamSpeak3
+
+> Auf Flathub liegt unter `com.teamspeak.TeamSpeak` auch TeamSpeak 6, das ist
+> aber noch eine Beta (6.0.0-beta4.1, Stand 2026-09-20).
+
+---
+
+## 6. Notizen und Medien
+
+    flatpak install -y flathub \
+      com.notesnook.Notesnook \
+      com.spotify.Client \
+      org.jdownloader.JDownloader
+
+---
+
+## 7. Grafik
+
+**Gimp**
+
+    sudo dnf install -y gimp
+
+**Affinity (über Wine)**
+
+Installer: https://downloads.affinity.studio/Affinity%20x64.exe
+Anleitung: https://github.com/seapear/AffinityOnLinux/blob/main/Guides/Wine/Guide.md
+
+> Wine nimmt nur die **.exe** an. Das MSIX-Paket, das die Download-Seite
+> voreingestellt anbietet, funktioniert nicht — dort „Enterprise (Intel/AMD)"
+> auswählen.
+
+1. Wine und winetricks aus Nobaras eigener Quelle
+
+        sudo dnf install -y winehq-staging winetricks
+
+   Prüfen: `wine --version` muss **11** oder höher zeigen.
+
+2. Prefix anlegen
+
+        export WINEPREFIX="/home/phil/.affinity"
+        wineboot --init
+
+   Der `export` gilt nur in dieser Shell. In einer neuen Shell die Zeile
+   wiederholen, bevor es weitergeht.
+
+3. Laufzeit-Bausteine nachrüsten
+
+        winetricks --unattended --force remove_mono vcrun2022 dotnet48 corefonts win11
+
+   .NET 4.8 braucht 10 bis 20 Minuten und sieht zwischendurch aus, als hinge
+   es fest. Das ist normal.
+
+4. Affinity installieren
+
+        wine "/home/phil/Downloads/Affinity x64.exe"
+
+   Meldungen des Windows-Installers lassen sich in der Regel mit „Nein"
+   wegklicken.
+
+5. Starten
+
+        wine "$WINEPREFIX/drive_c/Program Files/Affinity/Affinity/Affinity.exe"
+
+   Für einen Menü- oder Autostart-Eintrag muss `WINEPREFIX=/home/phil/.affinity`
+   davorstehen, sonst greift Wine auf `~/.wine` zu.
+
+---
+
+## 8. Entwicklung
+
+**Visual Studio Code** (Microsoft-Repo, nicht Flatpak)
+
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+    echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+    sudo dnf check-update
+    sudo dnf install -y code
+
+> Bewusst kein Flatpak: dort sitzt das eingebaute Terminal in der Sandbox und
+> sieht die node-, python- und git-Umgebung des Systems nicht. Erweiterungen
+> wie Claude Code brauchen ebenfalls Zugriff auf das Hostsystem.
+
+> **ComfyUI** stand hier ebenfalls, ist am 2026-09-20 vorerst
+> herausgenommen worden.
+
+---
+
+## 9. Spiele
+
+**Battle.net** (über Steam mit Proton)
+
+1. Installer `Battle.net-Setup.exe` von https://www.blizzard.com/download
+   herunterladen.
+
+2. In Steam: **Spiele → Ein Nicht-Steam-Spiel hinzufügen → Durchsuchen**.
+   Beim Dateityp auf **Alle Dateien** stellen, sonst taucht die `.exe` in der
+   Auswahl nicht auf.
+
+3. Den neuen Eintrag anklicken → **Eigenschaften → Kompatibilität** →
+   „Verwendung eines bestimmten Steam-Play-Kompatibilitätswerkzeugs erzwingen"
+   → **Proton - Experimental**.
+
+   > Stand 2026-09-20 läuft der bestehende Prefix damit (Proton 11.0-100).
+   > Ebenfalls installiert sind Proton 8.0 und Proton 9.0 (Beta).
+
+4. Eintrag starten und den Installer durchlaufen lassen.
+
+5. Danach zeigt der Steam-Eintrag noch auf den Installer. In den
+   **Eigenschaften** auf die installierte Anwendung umbiegen. Den Pfad dafür
+   ermitteln:
+
+        find /home/phil/.local/share/Steam/steamapps/compatdata -maxdepth 6 -iname "Battle.net.exe"
+
+   - **Ziel:** der gefundene Pfad, in Anführungszeichen
+   - **Ausführen in:** derselbe Pfad ohne `Battle.net.exe`
+
+   > Die Nummer im Pfad vergibt Steam beim Hinzufügen des Eintrags. Sie ist
+   > nach einer Neuinstallation eine andere, deshalb steht sie hier nicht fest.
+
+6. **Startoptionen** für Gamescope:
+
+        gamescope -W 1920 -H 1080 -f -O AUSGANG --force-grab-cursor -- %command%
+
+   > `AUSGANG` durch den Anschluss des Spielmonitors ersetzen. Nachsehen mit
+   > `kscreen-doctor -o`, unter X11 mit `xrandr --listmonitors`.
+   > Am 2026-09-20 lagen an: `DP-2` (links) und `HDMI-A-2` (rechts).
+
+**TSM (TradeSkillMaster)**
+
+Das Projekt veröffentlicht ein fertiges RPM. Der Befehl holt immer die
+neueste Fassung, ohne dass eine Versionsnummer hier festgeschrieben wird:
+
+    curl -s https://api.github.com/repos/exceptionptr/tsm-app-linux/releases/latest \
+      | grep -o 'https://[^"]*\.noarch\.rpm' | head -1 \
+      | xargs curl -L -o /tmp/tsm-app.rpm
+    sudo dnf install -y /tmp/tsm-app.rpm
+
+Start danach: `tsm-app`
+
+> Die App braucht Python 3.11+ und PySide6, beides zieht das RPM mit.
+> Sie erkennt WoW-Installationen unter Wine, Lutris und Steam selbst.
+
+**WoWUp**
+
+Nur als AppImage veröffentlicht, es gibt kein Flatpak und kein RPM:
+
+    mkdir -p ~/.local/bin
+    curl -s https://api.github.com/repos/WowUp/WowUp/releases/latest \
+      | grep -o 'https://[^"]*\.AppImage' | head -1 \
+      | xargs curl -L -o ~/.local/bin/WowUp.AppImage
+    chmod +x ~/.local/bin/WowUp.AppImage
+
+> AppImages brauchen `fuse`, das auf Nobara bereits installiert ist. Einen
+> Menüeintrag legt das AppImage nicht selbst an.
+
+**Wowhead**
+
+Kein Linux-Programm. Die Webseite braucht keine Installation, und der
+**Wowhead Client**, der Spieldaten hochlädt, gibt es ausschließlich für
+Windows (geprüft am 2026-09-20). Wer ihn braucht, müsste ihn wie Battle.net
+über Wine oder Lutris betreiben.
+
+---
+
+## Offen für die nächste Runde
+
+Punkte, die beim Aufräumen aufgefallen sind und noch entschieden werden müssen:
+
+1. **Skripte statt Abtippen** — Aufteilung in ein kurzes Basis-Skript und ein
+   ausführliches zweites, dazu dauerhafte URLs. In Arbeit.
+2. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
+   das Addon selbst sammelt auch ohne ihn.
+
+### Beim Aufräumen bereits korrigiert
+
+- `sudo snapd refresh` hieß richtig `sudo snap refresh` — inzwischen ganz
+  entfallen, siehe „Paketwege“ unten
+- `WINEPREFIX="home/phil/..."` → `/home/phil/...` (führender Schrägstrich
+  fehlte an drei Stellen, auch beim Installer-Pfad)
+- `identity.fxaccounts.enabled auf 1` → `true` (ist ein Ja/Nein-Wert)
+- `-y` bei den dnf- und flatpak-Befehlen einheitlich gesetzt
+- Balena-Etcher-Dateiname von der festen Version `2.1.6` gelöst
+
+### Affinity, überarbeitet am 2026-09-20
+
+- **WineHQ-Fremdquelle entfällt.** Nobara 44 liefert Wine selbst mit
+  (`winehq-staging` 11.13 aus Nobaras Copr, auf diesem Rechner bereits
+  installiert). Die alte Notiz richtete ein WineHQ-Repo für **Fedora 41** ein,
+  das dort nur Wine 10.18 hat. Damit fallen auch `sudo rm -f` auf eine fremde
+  Repo-Datei und `gpgcheck=0` weg.
+- **Drei Schritte entfallen durch Wine 11.** Der Herstellerleitfaden verlangt
+  ab Wine 10.17 zusätzlich `Windows.winmd`, eine `wintypes.dll` und einen
+  Bibliotheks-Override in `winecfg` — ab Wine 11 nicht mehr. Diese drei
+  Schritte fehlten in der alten Notiz ohnehin, also hätte sie so nicht
+  funktioniert.
+- **Weg A (`python3-pyqt6`) ist raus.** Das war die Abhängigkeit für das
+  grafische Installer-Skript von AffinityOnLinux, das wir nicht nehmen. Jetzt
+  gibt es nur noch einen Weg.
+- **winetricks bleibt.** Es lässt sich nicht herausnehmen: `vcrun2022`,
+  `dotnet48` und `corefonts` müssen in den Prefix, und auch das offizielle
+  Installer-Skript des Projekts bricht ohne winetricks ab. Neu ist, dass es
+  jetzt mitinstalliert wird statt unerwähnt vorausgesetzt zu werden.
+- **Hinweis ergänzt, dass nur die .exe funktioniert.** Die Download-Seite
+  bietet als Erstes ein MSIX-Paket an, das unter Wine nicht läuft.
+
+### Paketwege, entschieden am 2026-09-20
+
+- **Snap ist raus.** `snapd`, der `/snap`-Symlink und `snap refresh` standen in
+  den Notizen, aber auf dem Rechner war snapd nie installiert und kein einziges
+  Snap vorhanden. Drei Befehle weniger, darunter der heikle `ln -s`.
+- **Regel festgehalten:** erst `dnf`, dann Flatpak. Sechs der acht genutzten
+  Flatpaks stehen in keinem Repo, dort gibt es ohnehin keine Wahl.
+- **VS Code nur noch über das Microsoft-Repo.** So läuft es auf dem Rechner
+  bereits (Version 1.134.0). Der Flatpak sperrt das eingebaute Terminal in die
+  Sandbox und schneidet es von node, python und git ab.
+- **Discord bleibt Flatpak**, obwohl es das Paket auch im `terra`-Repo gibt.
+  Discord sperrt den Login, wenn ein Update aussteht, und Flathub zieht
+  schneller nach als ein Distributionspaket.
+- **Aufräumbefehl ins Update aufgenommen.** `flatpak uninstall --unused -y`
+  entfernt Laufzeitumgebungen, die kein Programm mehr braucht. Am 2026-09-20
+  lagen zwei NVIDIA-Runtimes zu je 822 MB parallel auf der Platte.
+- **AnyDesk als Vorbehalt vermerkt**, siehe Abschnitt 5.
+
+### Battle.net, erneuert am 2026-09-20
+
+- **Der feste Monitor-Ausgang ist raus.** Die alte Startoption nannte
+  `HDMI-A-1`, den es nicht mehr gibt. Statt eines festen Werts steht dort
+  jetzt ein Platzhalter mit einer Notiz, wie er zu ermitteln ist.
+- **Die feste Prefix-Nummer ist raus.** `2885867330` vergibt Steam beim
+  Hinzufügen des Eintrags, nach einer Neuinstallation steht dort eine andere
+  Zahl. Statt des festen Pfads steht jetzt der `find`-Befehl da, der ihn in
+  einem Zug ermittelt.
+- **Der fehlende Vorschritt ist ergänzt:** Installer laden, als Nicht-Steam-
+  Spiel eintragen, Proton erzwingen, installieren, danach den Eintrag auf die
+  installierte Anwendung umbiegen. Das erklärt auch, warum Ziel und
+  „Ausführen in" überhaupt von Hand gesetzt werden müssen.
+
+### Programme ergänzt am 2026-09-20
+
+- **TSM:** Das Projekt veröffentlicht ein fertiges `.noarch.rpm`. Der fehlende
+  Installationsschritt ist damit ein Befehl, der die neueste Fassung über die
+  GitHub-Schnittstelle auflöst — ohne Versionsnummer in der Notiz.
+- **Teamspeak:** Liegt auf Flathub (`com.teamspeak.TeamSpeak3`, 3.6.2). Die
+  Webseiten-Anleitung entfällt. TeamSpeak 6 ist dort noch Beta.
+- **WoWUp:** Nur als AppImage, kein Flatpak und kein RPM. Auch hier löst der
+  Befehl die neueste Fassung selbst auf. Zuletzt v2.23.1 vom 2026-08-31, das
+  Projekt wird also gepflegt.
+- **Wowhead:** Gibt es für Linux nicht. Die Downloadseite nennt ausschließlich
+  Windows. Als Notiz vermerkt statt als Schritt.
+- **ComfyUI** ist auf Wunsch vorerst herausgenommen.
