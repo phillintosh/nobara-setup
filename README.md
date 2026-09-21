@@ -4,6 +4,8 @@ Zwei Skripte plus die Schritte, die kein Skript übernehmen kann.
 
 ## Schnellstart
 
+**Nobara** (Fedora-Unterbau, `dnf`):
+
 ```bash
 # Teil 1 — Basis: Flathub, Enpass, VS Code, Claude Code
 curl -fsSL https://nxgr.de/nobara-basis | bash
@@ -13,6 +15,22 @@ curl -fsSL https://nxgr.de/nobara-basis | bash
 # Teil 2 — Alltag: alle übrigen Programme
 curl -fsSL https://nxgr.de/nobara-alltag | bash
 ```
+
+**CachyOS** (Arch-Unterbau, `pacman` und AUR):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis-cachyos.sh | bash
+
+# Neu starten, dann:
+
+curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag-cachyos.sh | bash
+```
+
+> Für CachyOS sind kurze Adressen unter `cachy-basis` und `cachy-alltag`
+> angefragt, aber noch nicht bestätigt. Bis dahin gelten die langen.
+
+Die Abschnitte unten beschreiben **Nobara**. Was auf CachyOS abweicht, steht
+gesammelt im Abschnitt „CachyOS statt Nobara".
 
 Nach dem ersten Befehl steht genug, um ab hier mit Claude weiterzuarbeiten.
 Beide Skripte laufen ohne Schaden mehrfach.
@@ -155,6 +173,13 @@ Paket von https://www.dropbox.com/install-linux laden, dann:
 
     cd ~/Downloads
     sudo dnf install ./nautilus-dropbox-*.rpm
+
+> ⚠️ **Auf CachyOS geht das so nicht** — Arch kennt keine RPM-Pakete. Der
+> nächstliegende Weg wäre `dropbox` und `nautilus-dropbox` aus dem AUR; beide
+> packen denselben offiziellen Dropbox-Daemon, nur anders verpackt. Das ist
+> eine echte Abweichung von der Regel „Dropbox bleibt, wie es ist", deshalb
+> steht sie in keinem Skript und wartet auf eine Entscheidung. Siehe „Offen
+> für die nächste Runde".
 
 **Filezilla**
 
@@ -372,11 +397,60 @@ Windows (geprüft am 2026-09-20). Wer ihn braucht, müsste ihn wie Battle.net
 
 ---
 
+## CachyOS statt Nobara
+
+Dieselben Programme, andere Paketverwaltung. Die Schritte und die Reihenfolge
+sind gleich, nur die Befehle unterscheiden sich. Was von Hand zu tun ist,
+ändert sich nicht.
+
+| | Nobara | CachyOS |
+|---|---|---|
+| Paketverwaltung | `dnf` | `pacman` |
+| Systemupdate | `nobara-sync cli` | `pacman -Syu` |
+| Fremde Pakete | COPR und eigene Repos | AUR über `paru` oder `yay` |
+| Enpass | eigenes yum-Repo | AUR `enpass-bin` |
+| VS Code | Microsoft-Repo | AUR `visual-studio-code-bin` |
+| Librewolf | eigenes Repo einrichten | `pacman -S librewolf`, liegt in `extra` |
+| Wine | `winehq-staging` aus Nobaras Copr | `wine-staging` aus `extra` |
+| TSM | RPM über die GitHub-Schnittstelle | AUR `tsm-app` |
+| WoWUp | AppImage von Hand | AUR `wowup-bin` |
+| Steam | `dnf install steam` | `multilib` muss aktiv sein |
+| Dropbox | RPM von der Webseite | siehe Warnung in Abschnitt 3 |
+
+**Drei Stellen, die auf CachyOS besondere Aufmerksamkeit brauchen:**
+
+**Der AUR-Helfer ist die Voraussetzung für fast alles.** Enpass, VS Code, TSM
+und WoWUp liegen alle im AUR. `paru` war bei CachyOS lange vorinstalliert,
+ist es seit September 2026 aber nicht mehr, weil das Projekt seit fast einem
+Jahr keine Änderungen mehr hatte. Das Basis-Skript sucht deshalb der Reihe
+nach: vorhandenes `paru`, vorhandenes `yay`, `paru` aus den CachyOS-Quellen,
+und baut zur Not `yay-bin` selbst.
+
+**VS Code muss aus dem AUR kommen, nicht aus `extra`.** Das Paket `code` in
+den Arch-Quellen ist der quelloffene Bau ohne Zugang zum
+Microsoft-Marktplatz. Die Claude-Code-Erweiterung gibt es dort nicht. Nötig
+ist `visual-studio-code-bin`.
+
+**`multilib` muss aktiv sein**, sonst fehlen Steam und die 32-Bit-Teile von
+Wine. Bei CachyOS ist es ab Werk eingeschaltet; das Alltag-Skript prüft es
+und warnt, statt einfach durchzulaufen.
+
+**Librewolf ist auf CachyOS einfacher**: Es liegt inzwischen in den offiziellen
+Arch-Quellen, das Einrichten eines Fremdrepos entfällt. Die drei Werte in
+`about:config` bleiben trotzdem Handarbeit.
+
+---
+
 ## Offen für die nächste Runde
 
 Punkte, die noch entschieden werden müssen:
 
-1. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
+1. **Dropbox auf CachyOS.** Arch kennt keine RPM-Pakete, der bisherige Weg
+   greift dort nicht. Die AUR-Pakete `dropbox` und `nautilus-dropbox` packen
+   denselben offiziellen Daemon, sind aber nicht derselbe Weg. Weil die Regel
+   ausdrücklich „Dropbox bleibt, wie es ist" lautet, entscheidet das Phil,
+   nicht das Skript.
+2. **Wowhead Client:** Wird er überhaupt gebraucht? Er läuft nur unter Wine,
    das Addon selbst sammelt auch ohne ihn.
 
 ### Beim Aufräumen bereits korrigiert
@@ -519,3 +593,31 @@ umgehängt statt neu vergeben.
 
 `curl`-Aufrufe werden nicht mitgezählt, der Dienst erkennt Maschinen am
 User-Agent. Die Installationsaufrufe verfälschen die Klickzahlen also nicht.
+
+### CachyOS ergänzt, 2026-09-21
+
+Zwei eigene Skripte statt Verzweigungen in den bestehenden. Nobara und
+CachyOS unterscheiden sich in fast jedem Befehl, eine gemeinsame Datei mit
+Weichen wäre schwerer zu lesen als zwei getrennte.
+
+Alle Paketnamen sind gegen die echten Quellen geprüft, nicht aus dem Kopf
+geschrieben: die offiziellen Arch-Quellen über `archlinux.org/packages` und
+das AUR über dessen Schnittstelle. Dabei kamen drei Dinge heraus, die man
+sonst falsch gemacht hätte.
+
+**Librewolf liegt inzwischen in `extra`** (156.0.0_1-1). Weder AUR noch
+Fremdrepo nötig, anders als auf Nobara. Die alte Annahme „Librewolf kommt
+immer aus einer eigenen Quelle" stimmt für Arch nicht mehr.
+
+**`code` aus `extra` wäre die falsche Wahl** — das ist der quelloffene Bau
+ohne Microsoft-Marktplatz, also ohne die Claude-Code-Erweiterung. Genau die
+braucht Phil ab dem ersten Schritt.
+
+**`paru` ist bei CachyOS nicht mehr vorinstalliert**, seit September 2026,
+weil das Projekt seit fast einem Jahr ruht. Ein Skript, das `paru` einfach
+voraussetzt, wäre auf einem frischen Rechner sofort gescheitert. Deshalb die
+Kaskade im Basis-Skript.
+
+Offen geblieben ist Dropbox: Der Weg über ein RPM von der Webseite hat auf
+Arch kein Gegenstück, und die Regel dazu ist ausdrücklich, dass nichts
+geändert wird. Das steht als Entscheidung bei Phil, nicht im Skript.
