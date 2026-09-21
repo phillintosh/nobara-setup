@@ -19,15 +19,12 @@ curl -fsSL https://nxgr.de/nobara-alltag | bash
 **CachyOS** (Arch-Unterbau, `pacman` und AUR):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis-cachyos.sh | bash
+curl -fsSL https://nxgr.de/cachy-basis | bash
 
 # Neu starten, dann:
 
-curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag-cachyos.sh | bash
+curl -fsSL https://nxgr.de/cachy-alltag | bash
 ```
-
-> Für CachyOS sind kurze Adressen unter `cachy-basis` und `cachy-alltag`
-> angefragt, aber noch nicht bestätigt. Bis dahin gelten die langen.
 
 Die Abschnitte unten beschreiben **Nobara**. Was auf CachyOS abweicht, steht
 gesammelt im Abschnitt „CachyOS statt Nobara".
@@ -46,7 +43,9 @@ Wer die Befehle lieber ganz liest, klont statt zu pipen:
 
 ```bash
 git clone https://github.com/phillintosh/nobara-setup.git
-cd nobara-setup && less basis.sh && ./basis.sh
+cd nobara-setup
+less basis.sh && ./basis.sh              # Nobara
+less basis-cachyos.sh && ./basis-cachyos.sh   # CachyOS
 ```
 
 ## Wie die Abschnitte zu lesen sind
@@ -60,8 +59,9 @@ Jede Überschrift unten sagt, wer den Abschnitt erledigt:
 | *gemischt* | Installation per Skript, Einstellungen von Hand |
 
 **Reine Handarbeit**, auch nach beiden Skripten: Fensterverhalten, Uhr,
-OpenRGB, NAS, Dropbox, Librewolf-`about:config`, Thunderbird-Konten,
-Enpass-Autostart, WoWUp-Menüeintrag, Affinity und Battle.net.
+OpenRGB-Profil, NAS, Dropbox, Librewolf-`about:config`, Thunderbird-Konten,
+Enpass-Autostart, Affinity und Battle.net. Auf Nobara kommt der
+WoWUp-Menüeintrag dazu; auf CachyOS legt ihn das AUR-Paket selbst an.
 
 **Feste Regel:** Dropbox bleibt wie unten beschrieben (RPM von der Webseite,
 Nautilus-Paket). Andere Wege haben Probleme gemacht. Der Befehl dort steht
@@ -74,11 +74,17 @@ Repo, sondern in Enpass unter der sicheren Notiz „Nobara Einrichtung".
 greift, gehört ins System — Dateimanager-Erweiterungen, Entwicklungswerkzeuge,
 Fernwartung. Was nur ein Fenster ist, darf gekapselt sein.
 
-Stand: 2026-09-20 · Grundlage: Nobara 44
+Stand: 2026-09-21 · Nobara 44 und CachyOS (Arch)
 
 ---
 
 ## 0. Vor der Installation (an einem anderen Rechner)  ·  *Handarbeit, an einem anderen Rechner*
+
+> Dieser Abschnitt gilt für **Nobara**. Für CachyOS gelten dieselben drei
+> Schritte — ISO laden, Prüfsumme vergleichen, Stick schreiben — nur mit dem
+> Abbild von cachyos.org und der dort angegebenen Prüfsumme. Balena Etcher
+> liegt auf Arch im AUR (`balena-etcher`), der Stick wird aber ohnehin an
+> einem Rechner geschrieben, der schon läuft.
 
 **ISO prüfen**
 
@@ -416,13 +422,15 @@ sind gleich, nur die Befehle unterscheiden sich. Was von Hand zu tun ist,
 | WoWUp | AppImage von Hand | AUR `wowup-bin` |
 | Steam | `dnf install steam` | `multilib` muss aktiv sein |
 | Dropbox | RPM von der Webseite | siehe Warnung in Abschnitt 3 |
+| Deutsche Oberflächen | `langpacks-de` | `firefox-i18n-de`, `thunderbird-i18n-de` |
+| Flatpak selbst | ist vorinstalliert | `pacman -S flatpak` im Basis-Skript |
 
-**Drei Stellen, die auf CachyOS besondere Aufmerksamkeit brauchen:**
+**Vier Stellen, die auf CachyOS besondere Aufmerksamkeit brauchen:**
 
 **Der AUR-Helfer ist die Voraussetzung für fast alles.** Enpass, VS Code, TSM
 und WoWUp liegen alle im AUR. `paru` war bei CachyOS lange vorinstalliert,
-ist es seit September 2026 aber nicht mehr, weil das Projekt seit fast einem
-Jahr keine Änderungen mehr hatte. Das Basis-Skript sucht deshalb der Reihe
+ist es seit September 2026 aber nicht mehr, weil das Projekt lange ruht — der
+letzte Stand dort ist vom Januar 2026, die letzte Fassung vom Juli 2025. Das Basis-Skript sucht deshalb der Reihe
 nach: vorhandenes `paru`, vorhandenes `yay`, `paru` aus den CachyOS-Quellen,
 und baut zur Not `yay-bin` selbst.
 
@@ -431,9 +439,11 @@ den Arch-Quellen ist der quelloffene Bau ohne Zugang zum
 Microsoft-Marktplatz. Die Claude-Code-Erweiterung gibt es dort nicht. Nötig
 ist `visual-studio-code-bin`.
 
-**`multilib` muss aktiv sein**, sonst fehlen Steam und die 32-Bit-Teile von
-Wine. Bei CachyOS ist es ab Werk eingeschaltet; das Alltag-Skript prüft es
-und warnt, statt einfach durchzulaufen.
+**`multilib` muss aktiv sein, sonst fehlt Steam.** Nur Steam — `wine-staging`
+liegt in `extra` und zieht keine `lib32`-Abhängigkeiten, es läuft auch ohne.
+Bei CachyOS ist multilib ab Werk eingeschaltet. Ist es aus, nimmt das
+Alltag-Skript Steam aus der Liste und macht weiter, statt an dieser Stelle
+abzubrechen.
 
 **Librewolf ist auf CachyOS einfacher**: Es liegt inzwischen in den offiziellen
 Arch-Quellen, das Einrichten eines Fremdrepos entfällt. Die drei Werte in
@@ -613,11 +623,55 @@ immer aus einer eigenen Quelle" stimmt für Arch nicht mehr.
 ohne Microsoft-Marktplatz, also ohne die Claude-Code-Erweiterung. Genau die
 braucht Phil ab dem ersten Schritt.
 
-**`paru` ist bei CachyOS nicht mehr vorinstalliert**, seit September 2026,
-weil das Projekt seit fast einem Jahr ruht. Ein Skript, das `paru` einfach
+**`paru` ist bei CachyOS nicht mehr vorinstalliert**, seit September 2026.
+Das Projekt ruht seit Januar 2026, die letzte Fassung ist vom Juli 2025. Ein Skript, das `paru` einfach
 voraussetzt, wäre auf einem frischen Rechner sofort gescheitert. Deshalb die
 Kaskade im Basis-Skript.
 
 Offen geblieben ist Dropbox: Der Weg über ein RPM von der Webseite hat auf
 Arch kein Gegenstück, und die Regel dazu ist ausdrücklich, dass nichts
 geändert wird. Das steht als Entscheidung bei Phil, nicht im Skript.
+
+### Nach der Konsistenzprüfung überarbeitet, 2026-09-21
+
+Ein Prüflauf gegen die Frage „sind beide Systemfassungen ein Guss" brachte
+18 Befunde. Drei davon waren schwer.
+
+- **Die multilib-Warnung war keine.** Steam liegt ausschließlich im Repo
+  `multilib`. Das Skript warnte zwar, wenn dieses Repo fehlt, installierte
+  Steam aber vier Zeilen später im selben Sammelbefehl wie acht andere
+  Pakete. Ohne multilib wäre pacman mit „target not found" ausgestiegen und
+  hätte unter `set -e` alles Weitere mitgerissen — Wine, die Flatpaks, TSM,
+  WoWUp und die Handarbeitsliste. Jetzt kommt Steam nur in die Liste, wenn
+  das Repo da ist.
+- **Das Aufräumen hätte fremde Pakete entfernt.** `pacman -Qtdq` listet die
+  verwaisten Pakete des ganzen Systems, nicht die dieses Skripts, und
+  `pacman -Rns` hätte sie mitsamt Abhängigkeiten entfernt. Die Nobara-Fassung
+  räumt an derselben Stelle nur Flatpak-Laufzeitumgebungen auf. Der Schritt
+  ist ersatzlos gestrichen.
+- **`pacman -Sy` gefolgt von `pacman -S` ist auf Arch der Weg in ein kaputtes
+  System** — neue Pakete gegen alte Bibliotheken. Ersetzt durch ein
+  vollständiges `-Syu`.
+
+Dazu die Fehlerbehandlung: Der letzte Zweig der AUR-Kaskade und die beiden
+AUR-Aufrufe im Basis-Skript standen nackt da. Schlug ein Bau fehl — bei
+Quellpaketen die wahrscheinlichste Störung —, endete das Skript wortlos, noch
+vor dem Schlusstext mit den Enpass-Schritten. Belegt war das daran, dass die
+Funktion `warn()` zwar definiert, aber kein einziges Mal aufgerufen wurde.
+
+**Zwei Befunde betrafen die Nobara-Fassung**, nicht die neue:
+
+- **OpenRGB fehlte dort.** Beide Handarbeitslisten verlangen, ein
+  OpenRGB-Profil anzulegen, aber nur das CachyOS-Skript installierte das
+  Programm. Auf Nobara liegt es in `nobara-updates` und ist jetzt ergänzt.
+- **Der Flathub-Wächter prüfte einen anderen Geltungsbereich als der spätere
+  Befehl.** `flatpak remotes` listet System- und Benutzer-Remotes, installiert
+  wird aber mit `--system`. Gibt es nur ein Benutzer-Remote namens `flathub`,
+  ging die Prüfung durch und der Install scheiterte. Das ist die Rückseite
+  genau des Fehlers, der am 20.09. mit `--system` behoben wurde — beim
+  Beheben wurde damals nur die eine Hälfte angefasst. Jetzt prüfen alle vier
+  Skripte mit `--system`.
+
+Außerdem fehlten die deutschen Oberflächen: `langpacks-de` hat auf Arch kein
+Sammelpaket, `firefox-i18n-de` und `thunderbird-i18n-de` sind jetzt einzeln
+drin. Ohne sie wären Firefox und Thunderbird auf Englisch gestartet.

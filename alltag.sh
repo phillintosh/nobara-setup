@@ -19,7 +19,7 @@ grau()  { printf '    \033[0;90m· %s\033[0m\n' "$*"; }
 warn()  { printf '    \033[0;33m! %s\033[0m\n' "$*"; }
 
 command -v dnf >/dev/null 2>&1 || { echo "Nur für Nobara/Fedora." >&2; exit 1; }
-flatpak remotes --columns=name | grep -qx 'flathub' || {
+flatpak remotes --system --columns=name | grep -qx 'flathub' || {
     echo "Flathub fehlt — erst basis.sh laufen lassen." >&2; exit 1; }
 
 blau "Anmeldung für sudo"
@@ -37,9 +37,9 @@ flatpak update -y || warn "flatpak update übersprungen"
 blau "Programme aus den Systemquellen"
 sudo dnf install -y \
     firefox thunderbird filezilla gimp \
-    gamescope steam \
+    gamescope steam openrgb \
     hunspell-de langpacks-de
-gruen "Firefox, Thunderbird, Filezilla, Gimp, Gamescope, Steam, Rechtschreibung"
+gruen "Firefox, Thunderbird, Filezilla, Gimp, Gamescope, Steam, OpenRGB, Rechtschreibung"
 
 blau "Wine und winetricks (für Affinity)"
 sudo dnf install -y winehq-staging winetricks

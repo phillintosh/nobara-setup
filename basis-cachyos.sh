@@ -7,7 +7,7 @@
 # Claude Code als Werkzeug.
 #
 # Aufruf:
-#   curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/basis-cachyos.sh | bash
+#   curl -fsSL https://nxgr.de/cachy-basis | bash
 #
 # Das Gegenstück für Nobara ist basis.sh. Gleiche Schritte, andere
 # Paketverwaltung.
@@ -36,12 +36,14 @@ sudo -v
 sudo_schleife=$!
 trap 'kill "$sudo_schleife" 2>/dev/null || true' EXIT
 
-blau "Paketdatenbank auffrischen"
-sudo pacman -Sy --noconfirm >/dev/null
-gruen "aufgefrischt"
+blau "System auf Stand bringen"
+# Vollständiges Upgrade, nicht nur -Sy: Neue Pakete gegen alte Bibliotheken
+# zu installieren ist auf Arch der Weg in ein kaputtes System.
+sudo pacman -Syu --noconfirm
+gruen "auf Stand"
 
 blau "AUR-Helfer"
-# Enpass, VS Code, Dropbox, TSM und WoWUp liegen alle im AUR. Ohne Helfer
+# Enpass, VS Code, TSM und WoWUp liegen alle im AUR. Ohne Helfer
 # geht auf CachyOS wenig. paru ist dort seit September 2026 nicht mehr
 # vorinstalliert, deshalb die Kaskade.
 if command -v paru >/dev/null 2>&1; then
@@ -52,19 +54,38 @@ elif sudo pacman -S --needed --noconfirm paru >/dev/null 2>&1; then
     AUR=paru; gruen "paru aus den CachyOS-Quellen installiert"
 else
     grau "kein Helfer in den Quellen, yay wird gebaut"
-    sudo pacman -S --needed --noconfirm base-devel git
     bau=$(mktemp -d)
-    git clone -q https://aur.archlinux.org/yay-bin.git "$bau/yay-bin"
-    ( cd "$bau/yay-bin" && makepkg -si --noconfirm )
-    rm -rf "$bau"
-    AUR=yay; gruen "yay gebaut"
+    if sudo pacman -S --needed --noconfirm base-devel git \
+       && git clone -q https://aur.archlinux.org/yay-bin.git "$bau/yay-bin" \
+       && ( cd "$bau/yay-bin" && makepkg -si --noconfirm ); then
+        rm -rf "$bau"
+        AUR=yay; gruen "yay gebaut"
+    else
+        rm -rf "$bau"
+        warn "Kein AUR-Helfer verfügbar. Enpass und VS Code kommen aus dem"
+        warn "AUR, ohne Helfer geht es hier nicht weiter."
+        warn "Von Hand: sudo pacman -S --needed base-devel git"
+        warn "           git clone https://aur.archlinux.org/yay-bin.git"
+        warn "           cd yay-bin && makepkg -si"
+        exit 1
+    fi
 fi
 
-aur_install() { "$AUR" -S --needed --noconfirm "$@"; }
+# Ein fehlgeschlagener AUR-Bau soll melden, was fehlt, statt das Skript
+# wortlos zu beenden — dort werden Quellen geladen und Schlüssel geprüft,
+# das ist die wahrscheinlichste Störung.
+aur_install() {
+    if "$AUR" -S --needed --noconfirm "$@"; then
+        return 0
+    else
+        warn "$* ließ sich nicht aus dem AUR bauen"
+        return 1
+    fi
+}
 
 blau "Flathub eintragen"
 sudo pacman -S --needed --noconfirm flatpak >/dev/null
-if flatpak remotes --columns=name | grep -qx 'flathub'; then
+if flatpak remotes --system --columns=name | grep -qx 'flathub'; then
     grau "war schon eingetragen"
 else
     sudo flatpak remote-add --system --if-not-exists flathub \
@@ -76,8 +97,11 @@ blau "Enpass"
 if pacman -Qq enpass-bin >/dev/null 2>&1; then
     grau "ist schon installiert"
 else
-    aur_install enpass-bin
-    gruen "Enpass installiert"
+    if aur_install enpass-bin; then
+        gruen "Enpass installiert"
+    else
+        warn "ohne Enpass fehlen später alle privaten Adressen"
+    fi
 fi
 
 blau "Visual Studio Code"
@@ -87,8 +111,11 @@ blau "Visual Studio Code"
 if pacman -Qq visual-studio-code-bin >/dev/null 2>&1; then
     grau "ist schon installiert"
 else
-    aur_install visual-studio-code-bin
-    gruen "VS Code installiert"
+    if aur_install visual-studio-code-bin; then
+        gruen "VS Code installiert"
+    else
+        warn "ohne VS Code fehlt die Oberfläche für Claude Code"
+    fi
 fi
 
 blau "Claude Code"
@@ -117,6 +144,6 @@ cat <<'ENDE'
 
     Dann weiter mit:
 
-    curl -fsSL https://raw.githubusercontent.com/phillintosh/nobara-setup/main/alltag-cachyos.sh | bash
+    curl -fsSL https://nxgr.de/cachy-alltag | bash
 
 ENDE

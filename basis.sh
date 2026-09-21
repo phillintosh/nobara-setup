@@ -34,7 +34,7 @@ trap 'kill "$sudo_schleife" 2>/dev/null || true' EXIT
 
 blau "Flathub eintragen"
 # Exakter Vergleich: "flathub-beta" darf nicht als "flathub" durchgehen.
-if flatpak remotes --columns=name | grep -qx 'flathub'; then
+if flatpak remotes --system --columns=name | grep -qx 'flathub'; then
     grau "war schon eingetragen"
 else
     sudo flatpak remote-add --system --if-not-exists flathub \
